@@ -25,7 +25,8 @@
 pro kms_conv_image,$
 	file=file,$
 	kernel_file=kernel_file,$
-	out_file=out_file
+	out_file=out_file,$
+	silent=silent
 
 	on_error,0
 
@@ -41,6 +42,44 @@ pro kms_conv_image,$
 	; read in the files
 	fits_read,file,im,hdr
 	fits_read,kernel_file,kernel,kerhdr
+
+	; figure out dimensions of the images
+	imsize = size(im,/dimen)
+	kersize = size(kernel,/dimen)
+
+	; get astrometry info
+	extast,hdr,ast_info
+	
+	if (n_elements(ast_info) eq 0) then message,'No astrometry in image!'
+
+	getrot,hdr,angle,cdelt
+	orig_cdelt = cdelt
+
+	; here in karl's program there is derotation
+	; for now I am going to ignore this
+	
+	; check if cdelts are equal, if not need more code
+	if (abs(cdelt[0]) NE abs(cdelt[1])) then $
+		message,'Need to match cdelts in image, code more!'
+
+	; calculate image pixel scale
+	image_scale = abs(cdelt)*3600.0
+
+	if (n_elements(silent) EQ 0) then $
+		print,'Image scale [arcsec] = ', image_scale
+
+	; normalize the kernel
+	kernel = kernel/total(kernel)
+	
+	; get the kernel pixel scale
+	ker_scale = fxpar(kerhdr,'PIXSCALE',count=count)
+	if count eq 0 then ker_scale = fxpar(kerhdr,'SECPIX',count=count)
+	if count eq 0 then ker_scale = abs(fxpar(kerhdr,'CD1_1',count=count)*3600.0)
+	if count eq 0 then ker_scale = abs(fxpar(kerhdr,'CDELT1',count=count)*3600.0)
+	if count eq 0 then message,'No pixel scale found in kernel image.'
+
+	if keyword_set(silent) eq 0 then $
+		print,'Kernel scale [arcsec] = ',ker_scale
 
 	stop
 end
