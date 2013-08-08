@@ -81,6 +81,19 @@ pro kms_conv_image,$
 	if keyword_set(silent) eq 0 then $
 		print,'Kernel scale [arcsec] = ',ker_scale
 
+	; copy header to output hdr
+	outhdr = hdr
+
+	; match pixel scales between image and kernel
+	new_kernel = matchpixscale(kernel,ker_scale[0],image_scale[0])
+
+	; make sure new kernel is centered
+	ensure_psf_centered,new_kernel
+
+	; make sure new kernel is normalized
+	new_kernel = new_kernel/total(new_kernel)
+
+
 	stop
 end
 
