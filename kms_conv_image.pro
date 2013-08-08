@@ -23,6 +23,7 @@
 ;
 ;
 ; To Do:
+; 	- needs error checking on unc image convolution
 ; 	- figure out what is up with /no_pad in convolve
 ; 	- better NaN replacement, nearest neighbor?
 ; 	- possibility to rebin image instead of kernel? 
@@ -31,8 +32,10 @@
 
 pro kms_conv_image,$
 	file=file,$
+	unc_file=unc_file,$
 	kernel_file=kernel_file,$
 	out_file=out_file,$
+	outunc_file=outunc_file,$
 	silent=silent
 
 	on_error,0
@@ -41,14 +44,23 @@ pro kms_conv_image,$
 	if keyword_set(file) eq 0 or keyword_set(kernel_file) eq 0 or $
 		keyword_set(out_file) eq 0 then $
 			message,'Must set file, kernel_file and out_file!'
+
+	; check that if unc_file is set that outunc_file is also set
+	if keyword_set(unc_file) and (keyword_set(outunc_file) eq 0) then $
+		message,'Need to name output uncertainty file.'
 	
 	; check that the input files actually point to files
 	if file_test(file) eq 0 then message,'Input file not found!'
 	if file_test(kernel_file) eq 0 then message,'Kernel file not found!'
+	if keyword_set(unc_file) then BEGIN
+		if file_test(unc_file) eq 0 then $
+			message,'Uncertainty file not found!'
+	endif
 
 	; read in the files
 	fits_read,file,im,hdr
 	fits_read,kernel_file,kernel,kerhdr
+	if keyword_set(unc_file) then fits_read,unc_file,uncim,unchdr
 
 	; figure out dimensions of the images
 	imsize = size(im,/dimen)
@@ -90,6 +102,7 @@ pro kms_conv_image,$
 
 	; copy header to output hdr
 	outhdr = hdr
+	if keyword_set(unc_file) then outunchdr = unchdr
 
 	; match pixel scales between image and kernel
 	new_kernel = matchpixscale(kernel,ker_scale[0],image_scale[0])
@@ -105,28 +118,49 @@ pro kms_conv_image,$
 	naninds = where(finite(outim) eq 0,nanct,complement=okinds)
 	if nanct gt 0 then outim[naninds] = 0d
 	
+	if keyword_set(unc_file) then begin
+		outuncim = uncim
+		unaninds = where(finite(outuncim) eq 0,unanct,complement=uokinds)
+		if unanct gt 0 then outuncim[unaninds] = 0d
+	endif
+
+	; do the convolution
 	if n_elements(imsize) gt 2 then BEGIN
 
 		for i=0,imsize[2]-1 do BEGIN
 			slice = outim[*,*,i]
 			outslice = convolve(slice,new_kernel,/no_pad)
 			outim[*,*,i] = outslice
+
+			if keyword_set(unc_file) then BEGIN
+				uslice = (outuncim[*,*,i])^2.
+				outuslice = convolve(uslice,new_kernel,/no_pad)
+				outuncim[*,*,i] = sqrt(outuslice)
+			endif
 		endfor
 	
 	endif else BEGIN
 		
-		outim = convolve(outim,new_kernel)
+		outim = convolve(outim,new_kernel,/no_pad)
+		outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))
 	
 	endelse
 
 	; put the NaNs back in
 	if nanct gt 0 then outim[naninds] = !values.f_nan
-	
+	if keyword_set(unc_file) then BEGIN
+		if unanct gt 0 then outuncim[unaninds] = !values.f_nan
+	endif
+
 	; add comment to hdr
 	sxaddpar,outhdr,'COMMENT','Convolved with kms_conv_image.'
+	sxaddpar,outunchdr,'COMMENT','Convolved with kms_conv_image.'
 
 	; write output file
 	writefits,out_file,outim,outhdr
+	if keyword_set(unc_file) then BEGIN
+		writefits,outunc_file,outuncim,outunchdr
+	endif
 
 end
 
