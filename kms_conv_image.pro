@@ -1,3 +1,4 @@
+
 ;+
 ; NAME: 
 ; 	kms_conv_image
@@ -12,6 +13,8 @@
 ; 	out_file: name for output fits image or cube
 ;
 ; KEYWORDS:
+; 	kfspec_format: deals properly with extensions for Herschel
+; 		spectroscopy as done by KINGFISH
 ; 	
 ; OUTPUTS:
 ;
@@ -36,7 +39,8 @@ pro kms_conv_image,$
 	kernel_file=kernel_file,$
 	out_file=out_file,$
 	outunc_file=outunc_file,$
-	silent=silent
+	silent=silent,$
+	kfspec_format=kfspec_format
 
 	on_error,0
 
@@ -58,9 +62,25 @@ pro kms_conv_image,$
 	endif
 
 	; read in the files
-	fits_read,file,im,hdr
+	if keyword_set(kfspec_format) then BEGIN
+		fhdr = mrdfits(file,0,fullhdr)
+		im = mrdfits(file,'image',hdr)
+		index = mrdfits(file,'ImageIndex',hdrind)
+	endif else BEGIN
+		fits_read,file,im,hdr
+	endelse
+
 	fits_read,kernel_file,kernel,kerhdr
-	if keyword_set(unc_file) then fits_read,unc_file,uncim,unchdr
+	
+	if keyword_set(unc_file) then BEGIN
+		if keyword_set(kfspec_format) then BEGIN
+			ufhdr = mrdfits(unc_file,0,ufullhdr)
+			uncim = mrdfits(unc_file,'image',unchdr)
+			uindex = mrdfits(unc_file,'ImageIndex',uhdrind)
+		endif else BEGIN
+			fits_read,unc_file,uncim,unchdr
+		endelse
+	endif
 
 	; figure out dimensions of the images
 	imsize = size(im,/dimen)
@@ -105,7 +125,7 @@ pro kms_conv_image,$
 	if keyword_set(unc_file) then outunchdr = unchdr
 
 	; match pixel scales between image and kernel
-	new_kernel = matchpixscale(kernel,ker_scale[0],image_scale[0])
+	new_kernel = kms_matchpixscale(kernel,ker_scale[0],image_scale[0])
 
 	; make sure new kernel is centered
 	ensure_psf_centered,new_kernel
@@ -157,9 +177,22 @@ pro kms_conv_image,$
 	sxaddpar,outunchdr,'COMMENT','Convolved with kms_conv_image.'
 
 	; write output file
-	writefits,out_file,outim,outhdr
+	if keyword_set(kfspec_format) then BEGIN
+		mwrfits,0,out_file,fullhdr,/create
+		mwrfits,outim,out_file,outhdr
+		mwrfits,index,out_file,hdrind
+	endif else BEGIN
+		writefits,out_file,outim,outhdr
+	endelse
+
 	if keyword_set(unc_file) then BEGIN
-		writefits,outunc_file,outuncim,outunchdr
+		if keyword_set(kfspec_format) then BEGIN
+			mwrfits,0,outunc_file,ufullhdr,/create
+			mwrfits,outuncim,outunc_file,outunchdr
+			mwrfits,uindex,outunc_file,uhdrind
+		endif else BEGIN
+			writefits,outunc_file,outuncim,outunchdr
+		endelse
 	endif
 
 end
