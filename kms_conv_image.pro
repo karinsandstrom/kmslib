@@ -122,8 +122,11 @@ pro kms_conv_image,$
 	; put the NaNs back in
 	if nanct gt 0 then outim[naninds] = !values.f_nan
 	
+	; add comment to hdr
+	sxaddpar,outhdr,'COMMENT','Convolved with kms_conv_image.'
 
+	; write output file
+	writefits,out_file,outim,outhdr
 
-	stop
 end
 
