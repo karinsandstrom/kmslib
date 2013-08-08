@@ -20,6 +20,13 @@
 ; MODIFICATION HISTORY:
 ; 	Written by Karin (7 Aug 2013)
 ; 	Attempting to be responsible & version control with GIT
+;
+;
+; To Do:
+; 	- figure out what is up with /no_pad in convolve
+; 	- better NaN replacement, nearest neighbor?
+; 	- possibility to rebin image instead of kernel? 
+; 		maybe important if image is undersampled
 ;-
 
 pro kms_conv_image,$
@@ -92,6 +99,29 @@ pro kms_conv_image,$
 
 	; make sure new kernel is normalized
 	new_kernel = new_kernel/total(new_kernel)
+
+	; locate NaNs and fill in 
+	outim = im
+	naninds = where(finite(outim) eq 0,nanct,complement=okinds)
+	if nanct gt 0 then outim[naninds] = 0d
+	
+	if n_elements(imsize) gt 2 then BEGIN
+
+		for i=0,imsize[2]-1 do BEGIN
+			slice = outim[*,*,i]
+			outslice = convolve(slice,new_kernel,/no_pad)
+			outim[*,*,i] = outslice
+		endfor
+	
+	endif else BEGIN
+		
+		outim = convolve(outim,new_kernel)
+	
+	endelse
+
+	; put the NaNs back in
+	if nanct gt 0 then outim[naninds] = !values.f_nan
+	
 
 
 	stop
