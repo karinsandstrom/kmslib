@@ -1,3 +1,4 @@
+
 ;+
 ;
 ; NAME: 
@@ -76,9 +77,12 @@ pro kms_extract_gaussian_cube,$
 	naxis3 = sxpar(cubehdr,'NAXIS3')
 	crval3 = sxpar(cubehdr,'CRVAL3')/1d3
 	cdelt3 = sxpar(cubehdr,'CDELT3')/1d3
+	crpix3 = sxpar(cubehdr,'CRPIX3')/1d3
 
 	; generate a vector that has the velocity axis
-	outvel = findgen(naxis3)*cdelt3 + crval3
+	v = findgen(naxis3)
+	vdif = v - (crpix3 - 1)
+	outvel = (vdif*cdelt3 + crval3)
 
 	; find center of extraction region 
 	; 	this converts an RA and Dec into pixel coordinates
@@ -134,7 +138,7 @@ pro kms_extract_gaussian_cube,$
 	psf =  a1*exp(-u/2.d)
 
 	; normalize the psf image to have a integral of 1
-	psf = psf/total(psf)
+;	psf = psf/total(psf)
 
 	; rebin to three dimensions to match cube
 	; 	this makes a "psf cube" where every slice is the same
