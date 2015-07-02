@@ -40,7 +40,8 @@ pro kms_conv_image,$
 	out_file=out_file,$
 	outunc_file=outunc_file,$
 	silent=silent,$
-	kfspec_format=kfspec_format
+	kfspec_format=kfspec_format,$
+	gunc_format=gunc_format
 
 	on_error,0
 
@@ -71,7 +72,7 @@ pro kms_conv_image,$
 	endelse
 
 	fits_read,kernel_file,kernel,kerhdr
-	
+
 	if keyword_set(unc_file) then BEGIN
 		if keyword_set(kfspec_format) then BEGIN
 			ufhdr = mrdfits(unc_file,0,ufullhdr)
@@ -80,6 +81,10 @@ pro kms_conv_image,$
 		endif else BEGIN
 			fits_read,unc_file,uncim,unchdr
 		endelse
+
+		if keyword_set(gunc_format) then BEGIN
+			uncim = uncim[*,*,3]
+		endif
 	endif
 
 	; figure out dimensions of the images
