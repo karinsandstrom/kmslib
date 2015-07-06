@@ -167,8 +167,11 @@ pro kms_conv_image,$
 	endif else BEGIN
 		
 		outim = convolve(outim,new_kernel,/no_pad)
-		outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))
-	
+
+		if keyword_set(unc_file) then BEGIN
+			outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))
+		endif
+
 	endelse
 
 	; put the NaNs back in
