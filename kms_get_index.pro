@@ -7,6 +7,7 @@
 ;   a given datatype.
 ;
 ; INPUTS:
+;	type - 'co', 'dust' or 'hi' currently
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -15,6 +16,8 @@
 ; OUTPUTS:
 ;
 ; EXAMPLE:
+;
+;   dust_index = kms_get_index(type='dust')
 ;
 ; MODIFICATION HISTORY:
 ; 	Written by Karin (30 June 2014)
