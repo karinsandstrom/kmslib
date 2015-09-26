@@ -15,6 +15,10 @@
 ; KEYWORDS:
 ; 	kfspec_format: deals properly with extensions for Herschel
 ; 		spectroscopy as done by KINGFISH
+; 	start_fwhm/end_fwhm: these keyword let you account properly
+; 		for the uncertainty convolution, by finding the number
+; 		of independent resolution elements that were averaged
+; 		together during the convolution
 ; 	
 ; OUTPUTS:
 ;
@@ -41,7 +45,9 @@ pro kms_conv_image,$
 	outunc_file=outunc_file,$
 	silent=silent,$
 	kfspec_format=kfspec_format,$
-	gunc_format=gunc_format
+	gunc_format=gunc_format,$
+	start_fwhm=start_fwhm,$
+	end_fwhm=end_fwhm
 
 	on_error,0
 
@@ -160,7 +166,7 @@ pro kms_conv_image,$
 			if keyword_set(unc_file) then BEGIN
 				uslice = (outuncim[*,*,i])^2.
 				outuslice = convolve(uslice,new_kernel,/no_pad)
-				outuncim[*,*,i] = sqrt(outuslice)
+				outuncim[*,*,i] = sqrt(outuslice)*(start_fwhm/end_fwhm)
 			endif
 		endfor
 	
@@ -169,7 +175,7 @@ pro kms_conv_image,$
 		outim = convolve(outim,new_kernel,/no_pad)
 
 		if keyword_set(unc_file) then BEGIN
-			outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))
+			outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))*(start_fwhm/end_fwhm)
 		endif
 
 	endelse
