@@ -32,6 +32,7 @@ function kms_get_index,$
 	if type eq 'co' then list = file_search(dir,'index_co*')
 	if type eq 'hi' then list = file_search(dir,'index_hi*')
 	if type eq 'dust' then list = file_search(dir,'index_dust*')
+	if type eq 'sfr' then list = file_search(dir,'index_sfr*')
 
 	if n_elements(list) gt 1 then BEGIN
 
