@@ -109,7 +109,7 @@ pro kms_conv_image,$
 	; for now I am going to ignore this
 	
 	; check if cdelts are equal, if not need more code
-	if (abs(cdelt[0]) NE abs(cdelt[1])) then $
+	if (abs(cdelt[0])-abs(cdelt[1]))/abs(cdelt[0]) gt 1e-3 then $
 		message,'Need to match cdelts in image, code more!'
 
 	; calculate image pixel scale
@@ -160,19 +160,19 @@ pro kms_conv_image,$
 
 		for i=0,imsize[2]-1 do BEGIN
 			slice = outim[*,*,i]
-			outslice = convolve(slice,new_kernel,/no_pad)
+			outslice = convolve(double(slice),new_kernel,/no_pad)
 			outim[*,*,i] = outslice
 
 			if keyword_set(unc_file) then BEGIN
 				uslice = (outuncim[*,*,i])^2.
-				outuslice = convolve(uslice,new_kernel,/no_pad)
+				outuslice = convolve(double(uslice),new_kernel,/no_pad)
 				outuncim[*,*,i] = sqrt(outuslice)*(start_fwhm/end_fwhm)
 			endif
 		endfor
 	
 	endif else BEGIN
 		
-		outim = convolve(outim,new_kernel,/no_pad)
+		outim = convolve(double(outim),new_kernel,/no_pad)
 
 		if keyword_set(unc_file) then BEGIN
 			outuncim = sqrt(convolve(outuncim^2.,new_kernel,/no_pad))*(start_fwhm/end_fwhm)
