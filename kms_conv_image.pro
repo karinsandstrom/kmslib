@@ -24,10 +24,6 @@
 ;
 ; EXAMPLE:
 ;
-; MODIFICATION HISTORY:
-; 	Written by Karin (7 Aug 2013)
-; 	Attempting to be responsible & version control with GIT
-;
 ;
 ; To Do:
 ; 	- needs error checking on unc image convolution

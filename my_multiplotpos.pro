@@ -1,3 +1,28 @@
+
+;+
+;
+; NAME: 
+; 		my_multiplotps
+;
+; INPUTS:
+; 		nx: number of plots x direction
+; 		ny: number of plots y direction
+; 		leftm: left margin fractional
+; 		rightm: right margin fractional
+; 		topm: top margin fractional
+; 		botm: bottom margin fractional
+; 		xgap, ygap: gap inbetween plots
+; 		szinch: size of plot in inches
+; 		aspectxy: aspect ratio
+;
+;  OUTPUTS:
+;  		xszinch, yszinch: xy dimensions
+;  		posarr = position of plot 
+;
+;
+;
+;-
+
 pro my_multiplotpos,$
 	nx=nx,$
 	ny=ny,$
