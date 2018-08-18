@@ -7,7 +7,7 @@
 ;   a given datatype.
 ;
 ; INPUTS:
-;	type - 'co', 'dust' or 'hi' currently
+;	type - 'kernel', 'co', 'dust' or 'hi' currently
 ;
 ; OPTIONAL INPUTS:
 ;
@@ -33,6 +33,7 @@ function kms_get_index,$
 	if type eq 'hi' then list = file_search(dir,'index_hi*')
 	if type eq 'dust' then list = file_search(dir,'index_dust*')
 	if type eq 'sfr' then list = file_search(dir,'index_sfr*')
+	if type eq 'kernel' then list= file_search(dir,'index_ker*')
 
 	if n_elements(list) gt 1 then BEGIN
 
